@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>掌中宇宙 PalmVerse | 沉浸式手相专家</title>
+    <style>
+        :root {
+            --primary: #FF8E8E; --secondary: #4FACFE; --energy: #FFCC00;
+            --bg: #FFF9F5; --text: #444; --card: #FFFFFF;
+        }
+
+        body {
+            font-family: 'PingFang SC', sans-serif; background: var(--bg);
+            color: var(--text); margin: 0; display: flex; flex-direction: column; align-items: center;
+            user-select: none; -webkit-tap-highlight-color: transparent;
+        }
+
+        /* 顶部导航 */
+        header { text-align: center; padding: 30px 20px; }
+        h1 { font-size: 2rem; color: var(--primary); margin: 0; }
+        .subtitle { font-size: 0.8rem; opacity: 0.5; }
+
+        /* 主交互区 */
+        .hand-stage {
+            position: relative; width: 280px; height: 350px;
+            background: white; border: 5px solid var(--text);
+            border-radius: 40px; box-shadow: 8px 8px 0px var(--primary);
+            margin: 10px 0; display: flex; justify-content: center; align-items: center;
+        }
+        .line-path { fill: none; stroke-width: 8; stroke-linecap: round; cursor: pointer; transition: 0.3s; }
+        .line-path:hover { stroke-width: 12; filter: brightness(1.1); }
+
+        /* 爆款卡片 */
+        .topic-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            gap: 10px; width: 95%; max-width: 500px; margin: 20px 0;
+        }
+        .topic-card {
+            background: white; border: 2px solid var(--text);
+            border-radius: 15px; padding: 12px 5px; text-align: center; cursor: pointer;
+        }
+        .topic-card:hover { transform: scale(1.05); }
+
+        /* 二级页面 */
+        .overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg); z-index: 100; display: none;
+            flex-direction: column; align-items: center; padding: 20px; box-sizing: border-box;
+        }
+        .overlay.active { display: flex; animation: slideIn 0.3s ease; }
+        .detail-box {
+            max-width: 450px; width: 100%; background: white;
+            border: 4px solid var(--text); border-radius: 25px; padding: 20px;
+        }
+        .compare-ui {
+            display: flex; justify-content: space-around; background: #FFF0F0;
+            border-radius: 15px; padding: 10px; margin: 15px 0; border: 2px dashed var(--primary);
+        }
+        .viz-svg { width: 60px; height: 80px; background: white; border-radius: 8px; margin-bottom: 5px; }
+
+        /* --- 核心彩蛋：可拖拽猫爪 --- */
+        #cat-paw-egg {
+            position: fixed; bottom: 30px; right: 30px;
+            width: 80px; height: 80px; font-size: 50px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: grab; z-index: 999;
+            filter: drop-shadow(4px 4px 0px rgba(0,0,0,0.1));
+            transition: transform 0.1s;
+        }
+        #cat-paw-egg:active { cursor: grabbing; transform: scale(0.9); }
+        .paw-tip {
+            position: absolute; top: -10px; font-size: 10px;
+            background: var(--text); color: white; padding: 2px 8px;
+            border-radius: 10px; white-space: nowrap; pointer-events: none;
+        }
+
+        /* 表白弹窗 */
+        #confession-ui {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255,249,245,0.98); z-index: 2000;
+            display: none; flex-direction: column; align-items: center; justify-content: center;
+        }
+
+        @keyframes slideIn { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>🖐️ 掌中宇宙</h1>
+    <p class="subtitle">专家级手相科普 · 治愈系交互</p>
+</header>
+
+<div class="hand-stage">
+    <svg viewBox="0 0 200 300" style="width:240px;">
+        <path d="M40,280 Q20,250 20,150 Q20,50 50,30 Q80,20 100,50 Q120,20 140,40 Q160,20 175,60 Q190,50 185,150 Q185,250 160,280 Z" fill="none" stroke="#444" stroke-width="4"/>
+        <path class="line-path" d="M 35 110 Q 100 80 175 105" stroke="#FF8E8E" onclick="openBox('emotion')"/>
+        <path class="line-path" d="M 35 150 Q 100 140 165 190" stroke="#4FACFE" onclick="openBox('wisdom')"/>
+        <path class="line-path" d="M 35 150 Q 90 190 70 270" stroke="#FFCC00" onclick="openBox('life')"/>
+    </svg>
+</div>
+
+<div class="topic-grid">
+    <div class="topic-card" onclick="openBox('rich')"><i>💰</i><br>搞钱手</div>
+    <div class="topic-card" onclick="openBox('love')"><i>🤡</i><br>反冤种</div>
+    <div class="topic-card" onclick="openBox('cat')"><i>🐈</i><br>吸猫印</div>
+</div>
+
+<div id="cat-paw-egg">
+    <span class="paw-tip">拽我/点我 🐾</span>
+    🐾
+</div>
+
+<div id="overlay" class="overlay">
+    <div class="detail-box">
+        <h2 id="d-title"></h2>
+        <div class="compare-ui">
+            <div style="text-align:center;">
+                <div class="viz-svg" id="svg-a"></div>
+                <div style="font-size:10px; color:var(--primary)" id="label-a"></div>
+            </div>
+            <div style="text-align:center;">
+                <div class="viz-svg" id="svg-b"></div>
+                <div style="font-size:10px; color:var(--primary)" id="label-b"></div>
+            </div>
+        </div>
+        <p id="d-body" style="line-height:1.6; font-size:0.95rem;"></p>
+        <div style="text-align:center; font-size:2rem; margin-top:10px;">😸</div>
+    </div>
+    <button style="margin-top:20px; padding:10px 40px; border-radius:20px; border:2px solid #444; background:none;" onclick="closeBox()">返回</button>
+</div>
+
+<div id="confession-ui">
+    <div style="font-size:80px; margin-bottom:20px;">😊👉👈</div>
+    <div style="background:white; border:4px solid var(--text); padding:30px; border-radius:30px; box-shadow:10px 10px 0px var(--primary); text-align:center;">
+        <h2 style="color:var(--primary)">被抓住了喵！</h2>
+        <p style="font-size:1.2rem; font-weight:bold;">看手相是假，<br>想牵你的手是真。 💖</p>
+        <button onclick="document.getElementById('confession-ui').style.display='none'" style="background:var(--text); color:white; border:none; padding:10px 30px; border-radius:50px; cursor:pointer;">牵住了！(⁄ ⁄•⁄ω⁄•⁄ ⁄)</button>
+    </div>
+</div>
+
+<script>
+    // 1. 数据配置
+    const configs = {
+        emotion: { title: "💖 感情线", labelA: "理想长线", labelB: "理智短线", svgA: '<svg viewBox="0 0 80 100"><path d="M10,40 Q40,10 70,25" fill="none" stroke="#FF8E8E" stroke-width="5"/></svg>', svgB: '<svg viewBox="0 0 80 100"><path d="M10,40 L60,35" fill="none" stroke="#FF8E8E" stroke-width="5"/></svg>', body: "长线宝宝对待感情极度纯粹，短线宝宝则更看重相处的舒适度与现实。"},
+        rich: { title: "💰 搞钱手", labelA: "财库纹", labelB: "太阳丘厚", svgA: '<svg viewBox="0 0 80 100"><path d="M10,40 H60" fill="none" stroke="#444" stroke-width="2"/><path d="M15,32 H55" fill="none" stroke="#FF8E8E" stroke-width="4"/></svg>', svgB: '<svg viewBox="0 0 80 100"><circle cx="55" cy="30" r="10" fill="#FF8E8E" opacity="0.3"/></svg>', body: "无名指下方的隆起是你的财富雷达，越红润代表近期偏财运越旺哦！"},
+        love: { title: "🤡 反冤种指南", labelA: "清醒智慧线", labelB: "下垂恋爱脑", svgA: '<svg viewBox="0 0 80 100"><path d="M10,50 L70,60" fill="none" stroke="#4FACFE" stroke-width="5"/></svg>', svgB: '<svg viewBox="0 0 80 100"><path d="M10,30 Q40,40 50,70" fill="none" stroke="#FF8E8E" stroke-width="4"/></svg>', body: "如果感情线下垂进入智慧线，代表感性常年战胜理性。记得多爱自己！"},
+        wisdom: { title: "🧠 智慧线", labelA: "创意弯线", labelB: "逻辑直线", svgA: '<svg viewBox="0 0 80 100"><path d="M10,50 Q40,60 60,90" fill="none" stroke="#4FACFE" stroke-width="5"/></svg>', svgB: '<svg viewBox="0 0 80 100"><path d="M10,50 L70,60" fill="none" stroke="#4FACFE" stroke-width="5"/></svg>', body: "弯线主直觉与艺术，直线主效率与逻辑。"},
+        life: { title: "⚡ 生命线", labelA: "超强续航", labelB: "文静低耗", svgA: '<svg viewBox="0 0 80 100"><path d="M15,50 Q60,60 40,95" fill="none" stroke="#FFCC00" stroke-width="5"/></svg>', svgB: '<svg viewBox="0 0 80 100"><path d="M15,50 Q30,60 20,95" fill="none" stroke="#FFCC00" stroke-width="5"/></svg>', body: "生命线代表精力。弧度越大，你的社交‘电池’容量就越大！"},
+        cat: { title: "🐈 吸猫印", labelA: "宠缘纹", labelB: "软萌手", svgA: '<svg viewBox="0 0 80 100"><path d="M10,80 L25,65 M20,85 L35,70 M30,90 L45,75" fill="none" stroke="#FF8E8E" stroke-width="3"/></svg>', svgB: '<svg viewBox="0 0 80 100"><rect x="15" y="20" width="50" height="60" rx="20" fill="#fdf2f2" stroke="#444" stroke-width="2"/></svg>', body: "手掌侧边的细纹是动物缘的象征，说明你有着天然的治愈磁场。"}
+    };
+
+    function openBox(k){
+        const d=configs[k]; document.getElementById('d-title').innerText=d.title;
+        document.getElementById('d-body').innerHTML=d.body;
+        document.getElementById('label-a').innerText=d.labelA; document.getElementById('label-b').innerText=d.labelB;
+        document.getElementById('svg-a').innerHTML=d.svgA; document.getElementById('svg-b').innerHTML=d.svgB;
+        document.getElementById('overlay').style.display='flex';
+    }
+    function closeBox(){ document.getElementById('overlay').style.display='none'; }
+
+    // 2. 音效模拟 (Web Audio API)
+    function playCatMeow() {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(400, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(800, ctx.currentTime + 0.1);
+        osc.frequency.exponentialRampToValueAtTime(600, ctx.currentTime + 0.3);
+        gain.gain.setValueAtTime(0.1, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.4);
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.start(); osc.stop(ctx.currentTime + 0.4);
+    }
+
+    // 3. 拖拽逻辑
+    const paw = document.getElementById('cat-paw-egg');
+    let isDragging = false;
+    let offset = { x: 0, y: 0 };
+
+    function startDrag(e) {
+        isDragging = true;
+        const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+        const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+        offset.x = clientX - paw.offsetLeft;
+        offset.y = clientY - paw.offsetTop;
+        paw.style.transition = 'none';
+    }
+
+    function doDrag(e) {
+        if (!isDragging) return;
+        const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+        const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+        paw.style.left = (clientX - offset.x) + 'px';
+        paw.style.top = (clientY - offset.y) + 'px';
+        paw.style.right = 'auto'; paw.style.bottom = 'auto';
+    }
+
+    function endDrag() {
+        if (!isDragging) return;
+        isDragging = false;
+        paw.style.transition = 'transform 0.1s';
+    }
+
+    paw.addEventListener('mousedown', startDrag);
+    window.addEventListener('mousemove', doDrag);
+    window.addEventListener('mouseup', endDrag);
+    paw.addEventListener('touchstart', startDrag);
+    window.addEventListener('touchmove', doDrag);
+    window.addEventListener('touchend', endDrag);
+
+    // 4. 点击彩蛋
+    paw.addEventListener('click', (e) => {
+        if (Math.abs(offset.x - (e.clientX - paw.offsetLeft)) > 5) return; // 拖动时不触发点击
+        playCatMeow();
+        setTimeout(() => {
+            document.getElementById('confession-ui').style.display = 'flex';
+        }, 300);
+    });
+</script>
+
+</body>
+</html>
